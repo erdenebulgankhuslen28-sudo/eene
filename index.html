@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ocean World Ultra Abyss</title>
+
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui;
+        background: radial-gradient(circle at top, #02021f, #000008, #000004);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        overflow: hidden;
+        color: #d6e6ff;
+      }
+
+      /* PHONE */
+      .phone {
+        width: 360px;
+        height: 640px;
+        border-radius: 28px;
+        background: linear-gradient(180deg, #020218, #000010);
+        padding: 14px;
+        overflow-y: auto;
+        position: relative;
+        box-shadow: 0 0 45px rgba(0, 140, 255, 0.18);
+      }
+
+      /* KRACKEN CARD */
+      .card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(14px);
+        border-radius: 16px;
+        padding: 10px;
+        margin: 10px 0;
+        box-shadow: 0 0 18px rgba(0, 120, 255, 0.12);
+        animation: breath 6s ease-in-out infinite;
+        border: 1px solid rgba(120, 180, 255, 0.12);
+      }
+
+      @keyframes breath {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.015);
+        }
+      }
+
+      button {
+        margin: 4px;
+        padding: 7px 10px;
+        border: none;
+        border-radius: 10px;
+        background: rgba(120, 180, 255, 0.15);
+        color: white;
+        cursor: pointer;
+      }
+
+      textarea {
+        width: 100%;
+        height: 60px;
+        border-radius: 10px;
+        border: none;
+        padding: 6px;
+        resize: none;
+        background: rgba(255, 255, 255, 0.06);
+        color: white;
+      }
+
+      /* RESET */
+      #reset {
+        position: absolute;
+        bottom: 12px;
+        right: 12px;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(0, 140, 255, 0.25);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+
+      /* WHITE HAIR BAR */
+      #hairContainer {
+        width: 100%;
+        height: 14px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 6px;
+      }
+
+      #hairFill {
+        height: 100%;
+        width: 0%;
+        background: white;
+        transition: 0.5s;
+      }
+
+      /* BUBBLES */
+      .bubble {
+        position: absolute;
+        bottom: -20px;
+        width: 6px;
+        height: 6px;
+        background: rgba(120, 200, 255, 0.14);
+        border-radius: 50%;
+        animation: rise linear infinite;
+      }
+
+      @keyframes rise {
+        0% {
+          transform: translateY(0);
+          opacity: 0;
+        }
+        20% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-120vh);
+          opacity: 0;
+        }
+      }
+
+      /* FISH */
+      .fish {
+        position: absolute;
+        width: 22px;
+        height: 10px;
+        background: rgba(80, 160, 255, 0.08);
+        border-radius: 50%;
+        animation: swim linear infinite;
+      }
+
+      @keyframes swim {
+        0% {
+          transform: translateX(-60px);
+        }
+        100% {
+          transform: translateX(420px);
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="phone">
+      <h3>hi eenee 🌊</h3>
+      <p id="date"></p>
+
+      <div class="card">
+        <h4>mood</h4>
+        <button onclick="setMood('sad')">😔</button>
+        <button onclick="setMood('calm')">☮️</button>
+        <button onclick="setMood('good')">😜</button>
+        <p id="moodOut"></p>
+      </div>
+
+      <div class="card">
+        <h4>ice cream</h4>
+        <button onclick="ice(true)">yes 🍦</button>
+        <button onclick="ice(false)">no ❌</button>
+        <p id="iceOut"></p>
+      </div>
+
+      <div class="card">
+        <h4>deep ocean equation</h4>
+        <p id="math"></p>
+        <input id="ans" placeholder="answer" />
+        <button onclick="checkMath()">submit</button>
+        <p id="mathOut"></p>
+      </div>
+
+      <!-- WHITE HAIR METER (ADDED PROPERLY) -->
+      <div class="card">
+        <h4>white hair meter</h4>
+
+        <div id="hairContainer">
+          <div id="hairFill"></div>
+        </div>
+
+        <p id="hairText"></p>
+      </div>
+
+      <div class="card">
+        <h4>diary (locked 12h)</h4>
+        <textarea id="note"></textarea>
+        <button onclick="saveDiary()">save</button>
+        <p id="noteOut"></p>
+      </div>
+
+      <div class="card">
+        <h4>memory shells</h4>
+        <div id="history"></div>
+      </div>
+
+      <div id="reset" onclick="resetAll()">⟳</div>
+    </div>
+
+    <script>
+      /* ---------------- DATA ---------------- */
+      let data = JSON.parse(localStorage.getItem("oceanUltraV2") || "{}");
+
+      if (!data.whiteHair) data.whiteHair = 0;
+      if (!data.locks) data.locks = {};
+      if (!data.days) data.days = {};
+      if (!data.history) data.history = {};
+
+      let today = new Date().toDateString();
+
+      if (!data.days[today]) {
+        data.days[today] = {
+          mood: null,
+          ice: null,
+          note: null,
+          mathDone: false,
+        };
+      }
+
+      /* ---------------- 12H LOCK ---------------- */
+      function canUse(key) {
+        return (
+          !data.locks[key] || Date.now() - data.locks[key] > 12 * 60 * 60 * 1000
+        );
+      }
+
+      function lock(key) {
+        data.locks[key] = Date.now();
+      }
+
+      /* ---------------- MATH ---------------- */
+      function getMathValue() {
+        return 1000 - data.whiteHair * 7;
+      }
+
+      function loadMath() {
+        document.getElementById(
+          "math"
+        ).innerText = `${getMathValue()} - 7 = ?  | white hair: ${
+          data.whiteHair
+        }`;
+      }
+
+      /* ---------------- WHITE HAIR BAR ---------------- */
+      function updateHair() {
+        let max = 20;
+        let percent = Math.min((data.whiteHair / max) * 100, 100);
+
+        document.getElementById("hairFill").style.width = percent + "%";
+        document.getElementById("hairText").innerText =
+          data.whiteHair + " white hair steps";
+      }
+
+      /* ---------------- CHECK MATH ---------------- */
+      function checkMath() {
+        if (!canUse("math")) return;
+
+        let val = parseInt(document.getElementById("ans").value);
+
+        if (val === getMathValue() - 7) {
+          data.whiteHair += 1;
+
+          lock("math");
+
+          document.getElementById("mathOut").innerText =
+            "correct 🌊 + white hair";
+
+          addHistory("math solved ✔");
+
+          save();
+          loadMath();
+          updateHair();
+        } else {
+          document.getElementById("mathOut").innerText = "try again 🌊";
+        }
+      }
+
+      /* ---------------- MOOD ---------------- */
+      function setMood(m) {
+        if (!canUse("mood")) return;
+
+        data.days[today].mood = m;
+        lock("mood");
+
+        document.getElementById("moodOut").innerText = m;
+        save();
+      }
+
+      /* ---------------- ICE ---------------- */
+      function ice(y) {
+        if (!canUse("ice")) return;
+
+        if (y) {
+          let c = parseInt(prompt("how many?")) || 0;
+          data.days[today].ice = { yes: true, count: c };
+          document.getElementById("iceOut").innerText = "yes " + c;
+        } else {
+          data.days[today].ice = { yes: false, count: 0 };
+          document.getElementById("iceOut").innerText = "no";
+        }
+
+        lock("ice");
+        save();
+      }
+
+      /* ---------------- DIARY ---------------- */
+      function saveDiary() {
+        if (!canUse("diary")) return;
+
+        data.days[today].note = document.getElementById("note").value;
+        lock("diary");
+
+        document.getElementById("noteOut").innerText = "saved";
+        addHistory("diary saved");
+        save();
+      }
+
+      /* ---------------- HISTORY ---------------- */
+      function addHistory(text) {
+        data.history[today] = {
+          date: new Date().toLocaleDateString(),
+          text: text,
+          day: data.days[today],
+          hair: data.whiteHair,
+          math: getMathValue(),
+        };
+        render();
+      }
+
+      function render() {
+        let box = document.getElementById("history");
+        box.innerHTML = "";
+
+        Object.keys(data.history)
+          .reverse()
+          .forEach((k) => {
+            let h = data.history[k];
+
+            let div = document.createElement("div");
+            div.className = "card";
+
+            div.innerHTML = `
+<b>${h.date}</b><br>
+${h.text}
+<div style="font-size:12px;opacity:0.75">
+mood: ${h.day.mood}<br>
+ice: ${JSON.stringify(h.day.ice)}<br>
+note: ${h.day.note}<br>
+white hair: ${h.hair}<br>
+math: ${h.math}
+</div>
+`;
+
+            box.appendChild(div);
+          });
+      }
+
+      /* ---------------- SAVE ---------------- */
+      function save() {
+        localStorage.setItem("oceanUltraV2", JSON.stringify(data));
+      }
+
+      /* ---------------- RESET ---------------- */
+      function resetAll() {
+        localStorage.clear();
+        location.reload();
+      }
+
+      /* ---------------- FX ---------------- */
+      for (let i = 0; i < 10; i++) {
+        let b = document.createElement("div");
+        b.className = "bubble";
+        b.style.left = Math.random() * 100 + "%";
+        b.style.animationDuration = 4 + Math.random() * 6 + "s";
+        document.body.appendChild(b);
+      }
+
+      for (let i = 0; i < 4; i++) {
+        let f = document.createElement("div");
+        f.className = "fish";
+        f.style.top = 100 + Math.random() * 500 + "px";
+        f.style.animationDuration = 12 + Math.random() * 10 + "s";
+        document.body.appendChild(f);
+      }
+
+      /* INIT */
+      document.getElementById("date").innerText = new Date().toDateString();
+      loadMath();
+      updateHair();
+      render();
+    </script>
+  </body>
+</html>
